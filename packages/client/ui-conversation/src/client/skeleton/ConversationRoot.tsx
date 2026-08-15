@@ -2,7 +2,7 @@
 // chain, AND the composer bar (session-maybe slot) stay mounted across
 // no-session/session transitions — the bar renders inert via owner props.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type UIEvent } from 'react'
 import clsx from 'clsx'
 import type { WorkspaceId } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConversationSlotProps, InputZone } from '../contract/slots.ts'
@@ -47,6 +47,77 @@ export function ConversationRoot({
     })
     seatObserver.current.observe(seat)
   }, [])
+
+  // Narrow reading mode: while the user is scrolled up and the input is
+  // unfocused, the composer seat yields to the transcript (one-tap reveal).
+  const [isNarrow, setIsNarrow] = useState(() =>
+    typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 1023px)').matches : false)
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const query = window.matchMedia('(max-width: 1023px)')
+    const onChange = (event: MediaQueryListEvent): void => { setIsNarrow(event.matches) }
+    query.addEventListener('change', onChange)
+    return () => { query.removeEventListener('change', onChange) }
+  }, [])
+  const scrollerEl = useRef<HTMLDivElement | null>(null)
+  const seatRef = useCallback((seat: HTMLDivElement | null): void => {
+    seatEl.current = seat
+    scrollerEl.current = seat?.parentElement ?? null
+    seatResizeRef(seat)
+  }, [seatResizeRef])
+  const [scrolledUp, setScrolledUp] = useState(false)
+  // The sidebar's bottom bar (narrow + collapsed) reveals the composer through
+  // this window event — a documented cross-package string contract, like the
+  // `data-conversation-scroll` attribute.
+  const [revealed, setRevealed] = useState(false)
+  const seatEl = useRef<HTMLDivElement | null>(null)
+  // Live hidden-state mirror for the scroll handler's hysteresis: the handler
+  // must decide from the latest flip without waiting for a re-render.
+  const scrolledUpRef = useRef(false)
+  const onScroll = (event: UIEvent<HTMLDivElement>): void => {
+    const el = event.currentTarget
+    // Distance to the TRANSCRIPT end, not the scroller end: subtracting the
+    // seat's own height keeps the measure invariant to the seat appearing or
+    // disappearing, so showing the composer cannot flip the threshold and
+    // cascade into the flicker a raw scrollHeight check would cause.
+    const seatHeight = seatEl.current?.offsetHeight ?? 0
+    const dist = el.scrollHeight - seatHeight - el.scrollTop - el.clientHeight
+    const prev = scrolledUpRef.current
+    // Hysteresis: a 40..120px dead zone absorbs slow-scroll jitter at the edge.
+    const next = prev ? dist < 40 ? false : prev : dist > 120
+    if (next === prev) return
+    scrolledUpRef.current = next
+    setScrolledUp(next)
+    // Scrolling up is a reading gesture: drop the keyboard with the composer.
+    if (next) el.querySelector('textarea')?.blur()
+  }
+  const revealComposer = useCallback((): void => {
+    setRevealed(true)
+    const scroller = scrollerEl.current
+    if (scroller === null) return
+    if (typeof scroller.scrollTo === 'function') scroller.scrollTo({ top: scroller.scrollHeight })
+    scroller.querySelector('textarea')?.focus()
+  }, [])
+  // Latest hidden state for the toggle handler: read through a ref so the
+  // callback (declared before the derivation) never touches the const early.
+  const composerHiddenRef = useRef(false)
+  const toggleComposer = useCallback((): void => {
+    // The bottom bar button is a switch: reveal when hidden, hide when shown
+    // (blur so the mobile keyboard closes with the composer).
+    if (composerHiddenRef.current) {
+      revealComposer()
+    } else {
+      setRevealed(false)
+      scrollerEl.current?.querySelector('textarea')?.blur()
+    }
+  }, [revealComposer])
+  useEffect(() => {
+    const onToggleEvent = (): void => { toggleComposer() }
+    window.addEventListener('dsh.composer.toggle', onToggleEvent)
+    return () => {
+      window.removeEventListener('dsh.composer.toggle', onToggleEvent)
+    }
+  }, [toggleComposer])
 
   const sessionWorkspace = sessionId === undefined
     ? undefined
@@ -167,6 +238,12 @@ export function ConversationRoot({
   )
 
   const phase = settling ? 'settling' : hero ? 'hero' : 'active'
+  // Narrow reading mode: the composer stays out of the way by default —
+  // hidden until the bottom bar reveals it, then again while the user scrolls
+  // up. Interaction overlays (pending) must always stay visible.
+  const composerHidden = isNarrow && phase === 'active' && pending.length === 0
+    && (scrolledUp || !revealed)
+  composerHiddenRef.current = composerHidden
   const composer = renderSlotChain(
     'conversation.composer',
     { interactions: pending, session },
@@ -178,15 +255,15 @@ export function ConversationRoot({
   // on the fallback alone would leave Question/Approval panels at the content
   // end off-screen when the user is not pinned to the floor.
   const composerSeat = (
-    <div ref={seatResizeRef} className={css.composerSeat} data-composer-seat="">
+    <div ref={seatRef} className={css.composerSeat} data-composer-seat="">
       {composer}
     </div>
   )
 
   return (
-    <div className={css.root} data-phase={phase}>
+    <div className={css.root} data-phase={phase} data-composer-hidden={composerHidden || undefined}>
       {renderSlot('conversation.session.header', {})}
-      <div className={css.scrollBody} data-conversation-scroll="">
+      <div className={css.scrollBody} data-conversation-scroll="" onScroll={onScroll}>
         {renderSlot('conversation.session', {})}
         {composerSeat}
       </div>

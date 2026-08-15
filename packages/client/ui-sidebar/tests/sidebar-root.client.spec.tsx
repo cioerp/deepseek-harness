@@ -7,6 +7,7 @@ import type {
   SidebarSettingsOwnerProps,
 } from '../src/client/contract/slots.ts'
 import { SidebarRoot } from '../src/client/SidebarRoot.tsx'
+import css from '../src/client/SidebarRoot.module.css'
 import { en } from '../src/client/locales.ts'
 
 // English-dictionary translate stub: the shell renders the same copy the
@@ -23,7 +24,7 @@ afterEach(() => {
 // props share; stub them as never-called functions.
 const neverHook = (() => { throw new Error('shell must not read global hooks') }) as never
 
-function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
+function mountShell({ collapsed = false, width = 300, narrow = false }: { collapsed?: boolean; width?: number; narrow?: boolean } = {}) {
   const startSession = vi.fn()
   const toggleSidebar = vi.fn()
   let regionOwner: SidebarSectionOwnerProps | undefined
@@ -31,10 +32,10 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
   let footerActionOwner: SidebarFooterActionOwnerProps | undefined
   const brandMark = <span data-testid="custom-brand-mark">M</span>
   const brandName = <span data-testid="custom-brand-name">Custom Brand</span>
-  let current = { collapsed, width }
+  let current = { collapsed, width, narrow }
   const root = () => (
     <SidebarRoot
-      collapsed={current.collapsed} width={current.width}
+      collapsed={current.collapsed} width={current.width} narrow={current.narrow}
       useSessions={neverHook} useWorkspaces={neverHook}
       startSession={startSession} toggleSidebar={toggleSidebar} t={t}
       renderSlot={((
@@ -76,6 +77,7 @@ function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; w
       current = { ...current, ...next }
       view.rerender(root())
     },
+    rootElement: () => view.container.firstElementChild as HTMLElement,
   }
 }
 
@@ -138,5 +140,25 @@ describe('SidebarRoot shell', () => {
     const b = mountShell({ collapsed: true })
     expect(b.regionOwner().wide).toBe(false)
     expect(screen.getByRole('button', { name: 'Open sidebar' })).toBeTruthy()
+  })
+
+  it('docks the collapsed rail as a bottom bar on narrow viewports', () => {
+    const b = mountShell({ collapsed: true, narrow: true })
+    expect(b.rootElement().classList.contains(css.bottomBar)).toBe(true)
+    // Wide only: the same collapse without the narrow flag keeps the rail.
+    const wide = mountShell({ collapsed: true })
+    expect(wide.rootElement().classList.contains(css.bottomBar)).toBe(false)
+  })
+
+  it('the bottom bar toggles the composer through the window contract', () => {
+    const listener = vi.fn()
+    window.addEventListener('dsh.composer.toggle', listener)
+    try {
+      mountShell({ collapsed: true, narrow: true })
+      fireEvent.click(screen.getByRole('button', { name: 'Input' }))
+      expect(listener).toHaveBeenCalledOnce()
+    } finally {
+      window.removeEventListener('dsh.composer.toggle', listener)
+    }
   })
 })

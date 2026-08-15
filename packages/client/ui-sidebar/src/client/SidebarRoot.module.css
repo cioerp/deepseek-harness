@@ -319,6 +319,60 @@
   align-items: center;
 }
 
+/* Narrow mobile: the rail is a full-width bottom bar (AppFrame reserves its
+   56px strip under the center column), so the stack goes horizontal and the
+   workspace region yields to the strip — expand the sidebar to browse. */
+.root.bottomBar {
+  flex-direction: row;
+  align-items: center;
+  height: 100%;
+  padding: 6px 12px;
+}
+
+.root.bottomBar .logoRow {
+  height: auto;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.root.bottomBar .newSession {
+  margin: 0 4px;
+}
+
+.root.bottomBar .regionArea {
+  display: none;
+}
+
+/* The composer-reveal pill in the narrow bottom bar (input box stays
+   collapsed by default on mobile). */
+.root.bottomBar .inputReveal {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 12px;
+  margin: 0 4px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-button-elevated-fill);
+  cursor: pointer;
+}
+
+.root.bottomBar .inputReveal:hover {
+  background: var(--dsw-alias-button-floating-hover);
+}
+
+.root.bottomBar .footArea {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
 .collapsed .settingsArea,
 .collapsed .footerActions {
   display: flex;

@@ -96,6 +96,8 @@ export interface SidebarOwnerProps {
   collapsed: boolean
   /** Rendered column width in px (SIDEBAR_COLLAPSED when collapsed). */
   width: number
+  /** True below the auto-collapse breakpoint; the collapsed rail then docks as a bottom bar. */
+  narrow?: boolean
 }
 
 /** Conversation owner share: business state and actions belong to the registrant. */

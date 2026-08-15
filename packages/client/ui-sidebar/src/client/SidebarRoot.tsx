@@ -42,6 +42,7 @@ const SCROLLBAR_LINGER_MS = 2000
 export function SidebarRoot({
   collapsed,
   width,
+  narrow,
   startSession,
   toggleSidebar,
   t,
@@ -116,7 +117,8 @@ export function SidebarRoot({
       ref={column}
       className={clsx(
         css.root, !wide && css.collapsed, !wide && everWide.current && css.railIn,
-        collapsed && wide && css.fading, !pointerInside && css.quietBars,
+        collapsed && wide && css.fading, collapsed && narrow && css.bottomBar,
+        !pointerInside && css.quietBars,
       )}
       style={wide ? { width: collapsed ? lastWideWidth.current : width } : undefined}
       onPointerEnter={() => {
@@ -195,6 +197,20 @@ export function SidebarRoot({
           expandSidebar: () => { if (collapsed) toggleSidebar() },
         })}
       </div>
+
+      {/* Narrow bottom bar: the composer stays collapsed by default on mobile
+          (ConversationRoot data-composer-hidden) — this pill toggles it,
+          via the documented `dsh.composer.toggle` window contract. */}
+      {collapsed && narrow && (
+        <button
+          type="button"
+          className={css.inputReveal}
+          aria-label={t('input.reveal')}
+          onClick={() => { window.dispatchEvent(new CustomEvent('dsh.composer.toggle')) }}
+        >
+          {t('input.reveal')}
+        </button>
+      )}
 
       {/* Footer actions stack above Settings in both sidebar widths. */}
       <div className={css.footArea}>

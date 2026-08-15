@@ -23,13 +23,38 @@
 }
 
 .sidebarCol {
+  /* Explicit tracks: the narrow floating rail leaves the grid flow, and
+     auto-placement would otherwise move the conversation into the 0px track. */
+  grid-column: 1;
   min-width: 0;
   overflow: hidden;
   background: var(--dsw-specific-sidebar-fill);
   border-right: 1px solid var(--dsw-alias-border-l1);
 }
 
+/* Narrow + collapsed: the rail leaves the grid flow (0 track) so the
+   conversation keeps the full width, and docks as a full-width bottom bar
+   over the composer's strip; the center column reserves that 56px so the
+   composer sits above the bar and nothing on screen is covered. */
+.frame[data-sidebar-collapsed][data-narrow] .sidebarCol {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: auto;
+  height: 56px;
+  z-index: 8;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  border-right: none;
+}
+
+.frame[data-sidebar-collapsed][data-narrow] .centerCol {
+  padding-bottom: 56px;
+}
+
 .centerCol {
+  grid-column: 2;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -37,6 +62,7 @@
 }
 
 .detailsCol {
+  grid-column: 3;
   min-width: 0;
   overflow: hidden;
   border-left: 1px solid var(--dsw-alias-border-l2);

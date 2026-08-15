@@ -543,3 +543,90 @@ describe('ConversationRoot resident composer', () => {
     expect(b.view.queryByRole('button', { name: 'Retry' })).toBeNull()
   })
 })
+
+describe('ConversationRoot — narrow composer auto-hide', () => {
+  const narrowMedia = {
+    matches: true,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn(() => narrowMedia))
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubScroll(el: HTMLElement, scrollTop: number): void {
+    // jsdom has no layout: fake the scroller geometry for the distance check.
+    Object.defineProperty(el, 'scrollHeight', { value: 1200, configurable: true })
+    Object.defineProperty(el, 'clientHeight', { value: 600, configurable: true })
+    Object.defineProperty(el, 'scrollTop', { value: scrollTop, configurable: true })
+  }
+
+  it('keeps the composer collapsed by default, toggles on the window contract', () => {
+    const b = mount(conversationSnapshot())
+    const root = b.view.container.firstElementChild as HTMLElement
+    const scroller = b.view.container.querySelector('[data-conversation-scroll]') as HTMLElement
+    // Default: hidden — the input box appears only on explicit reveal.
+    expect(root.hasAttribute('data-composer-hidden')).toBe(true)
+    act(() => { window.dispatchEvent(new CustomEvent('dsh.composer.toggle')) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(false)
+    expect(document.activeElement).toBe(b.view.getByRole('textbox'))
+    // Toggle again while shown: hidden, and the input loses focus.
+    act(() => { window.dispatchEvent(new CustomEvent('dsh.composer.toggle')) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(true)
+    expect(document.activeElement).not.toBe(b.view.getByRole('textbox'))
+    // Scrolling up hides again; reaching the bottom (within the 40px show
+    // threshold) keeps it visible.
+    act(() => { window.dispatchEvent(new CustomEvent('dsh.composer.toggle')) })
+    stubScroll(scroller, 300)
+    act(() => { fireEvent.scroll(scroller) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(true)
+    stubScroll(scroller, 565)
+    act(() => { fireEvent.scroll(scroller) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(false)
+  })
+})
+
+describe('ConversationSessionHeader — narrow collapse', () => {
+  const narrowMedia = {
+    matches: true,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', vi.fn(() => narrowMedia))
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('collapses to a one-line title bar by default and expands on tap', () => {
+    const b = mount(conversationSnapshot())
+    // Collapsed: a single toggle showing the session title; no view tabs.
+    const toggle = b.view.getByRole('button', { name: 'Child' })
+    expect(b.view.queryByRole('tab')).toBeNull()
+    fireEvent.click(toggle)
+    // Expanded: the view tabs appear, and the collapse control folds back.
+    expect(b.view.getAllByRole('tab').length).toBeGreaterThan(0)
+    fireEvent.click(b.view.getByRole('button', { name: '收起标题栏' }))
+    expect(b.view.queryByRole('tab')).toBeNull()
+  })
+})
+
+describe('ConversationSessionHeader — desktop fold', () => {
+  it('starts expanded on wide viewports and folds on demand', () => {
+    // No matchMedia stub: jsdom lacks it, so `narrow` resolves false.
+    const b = mount(conversationSnapshot())
+    // Desktop starts expanded: view tabs visible.
+    expect(b.view.getAllByRole('tab').length).toBeGreaterThan(0)
+    fireEvent.click(b.view.getByRole('button', { name: '收起标题栏' }))
+    // Folded to the one-line title bar: no tabs, title toggle shown.
+    expect(b.view.queryByRole('tab')).toBeNull()
+    fireEvent.click(b.view.getByRole('button', { name: 'Child' }))
+    expect(b.view.getAllByRole('tab').length).toBeGreaterThan(0)
+  })
+})

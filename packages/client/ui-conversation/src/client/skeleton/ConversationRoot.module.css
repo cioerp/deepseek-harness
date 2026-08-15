@@ -19,7 +19,10 @@
      the input card clears the bare clearance, so the input card stays exactly
      content + 32px at every width. Declared on the root because the
      transcript and the composer seat are sibling subtrees. */
-  --dsh-chat-content-width: 748px;
+  /* Fluid cap: tracks the viewport (vw, so every consumer resolves the same
+     value) up to 1200px so a widescreen uses the column width, never below
+     the original 748px on narrow windows. */
+  --dsh-chat-content-width: clamp(748px, 72vw, 1200px);
   --dsh-composer-card-max-width: calc(var(--dsh-chat-content-width) + 32px);
   --dsh-composer-side-clearance: 16px;
   --dsh-composer-dock-inset: 8px;
@@ -48,6 +51,63 @@
    column space; the root-owned scrollport and composer remain below it. */
 .headerHidden {
   display: none;
+}
+
+/* Narrow reading mode (ConversationSessionHeader): the header chrome
+   collapses to a one-line title bar by default; tapping it expands the full
+   header, and the expanded header carries a collapse button. */
+.headerCollapsed {
+  padding: 0;
+}
+
+.headerToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 20px;
+  border: none;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 22px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.headerToggleTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.headerToggleIcon {
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.headerCollapseButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 28px;
+  background: transparent;
+  cursor: pointer;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.headerCollapseButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .titleRow {
@@ -270,6 +330,16 @@
     color-mix(in srgb, var(--dsw-alias-bg-base) 0%, transparent) 0px,
     var(--dsw-alias-bg-base) 36px
   );
+}
+
+/* Narrow reading mode (ConversationRoot data-composer-hidden): the composer
+   seat yields to the transcript while the user is scrolled up and the input
+   is unfocused; the sidebar bottom bar carries the reveal button. Height 0
+   (not a transform) so the hidden seat never extends the scrollable area. */
+.root[data-composer-hidden] .composerSeat {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 
 /* Views may opt into a composer overlay while ConversationRoot retains
