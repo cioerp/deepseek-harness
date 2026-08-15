@@ -8,9 +8,11 @@
  * Export discipline: packages/client/AGENTS.md.
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-api-remotes/client'
 import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
 import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-web-react'
+import { LanAccessRow, type LanAccessRowInjected } from './LanAccessRow.tsx'
 // Type-only: the settings slot declarations plus the ctx.settingsScope Context
 // merge. Cross-plugin collaboration goes through the service, never a value
 // import (client bundle purity gate).
@@ -54,7 +56,16 @@ const NS = 'settings'
  * ui-settings' apply, whose activation order relative to this one is NOT
  * constrained; registrations depend on their slots through `slots.inject()`.
  */
-export const inject = ['slots', 'locale', 'connection']
+export const inject = ['slots', 'locale', 'connection', 'settingsScope', 'remote']
+
+/** The `network.lanAccess` settings namespace (registered by the web-app host). */
+const LAN_NAMESPACE = 'network'
+
+/** The namespace's section shape, mirrored from the host registration. */
+interface LanConfig {
+  /** Serve the GUI on all interfaces (LAN reachable). */
+  lanAccess: boolean
+}
 
 /**
  * Register the `settings` dictionaries, the chrome content, and the General
@@ -175,4 +186,28 @@ export function apply(ctx: ClientContext): void {
     locale: NS,
     children: { 'settings.general.item': { kind: 'list', scope: 'root' } },
   }, GeneralSection))
+
+  // LAN-access switch: the `network.lanAccess` namespace (registered by the
+  // web-app host) flips the webserver host in the profile patch. The switch
+  // mirrors the resolved value into a snapshot store for the row.
+  const lanScope = ctx.settingsScope.bind<LanConfig>({ namespace: LAN_NAMESPACE })
+  const lanAccess = createSnapshotStore(false)
+  const adoptLan = (): void => {
+    // `set` (whole-value replace), never `update` (immer draft mutator):
+    // a scalar store's recipe return is discarded, so update cannot move it.
+    const value = lanScope.getSnapshot().value?.lanAccess ?? false
+    if (value !== lanAccess.getSnapshot()) lanAccess.set(value)
+  }
+  lanScope.subscribe(() => adoptLan())
+  adoptLan()
+  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+    name: 'settings.general.item',
+    id: 'lan-access',
+    order: 30,
+    locale: NS,
+    inject: (): LanAccessRowInjected => ({
+      hooks: { lanAccess },
+      setLanAccess: (enabled) => { void lanScope.set('lanAccess', enabled) },
+    }),
+  }, LanAccessRow))
 }

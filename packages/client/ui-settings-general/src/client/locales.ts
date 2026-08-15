@@ -8,6 +8,8 @@ export const zh = {
   'openDocument': '打开配置文件',
   'openDocument.error': '无法打开配置文件',
   'general.nav': '通用设置',
+  'lan.access': '局域网访问',
+  'lan.accessHint': '允许局域网内设备访问此界面',
 } satisfies Record<string, string>
 
 /** The settings namespace key union. */
@@ -21,4 +23,6 @@ export const en = {
   'openDocument': 'Open configuration file',
   'openDocument.error': 'Could not open configuration file',
   'general.nav': 'General',
+  'lan.access': 'LAN access',
+  'lan.accessHint': 'Let LAN devices reach this GUI',
 } satisfies Record<SettingsKey, string>

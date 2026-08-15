@@ -48,6 +48,22 @@ async function bench(isLoopback = true) {
     api: { settings: { describe: settingsDescribe, openDocument: settingsOpenDocument } },
     isLoopback,
   } as never)
+  // The LAN-access row binds the `network` namespace through the settings
+  // scope transport; an unavailable scope keeps the row at its default.
+  ctx.provide('settingsScope', {
+    bind: () => ({
+      getSnapshot: () => ({
+        status: 'unavailable' as const, value: undefined, base: undefined,
+        user: undefined, revision: undefined, writable: false, mode: 'memory' as const,
+      }),
+      subscribe: () => () => {},
+      load: async () => {},
+      set: async () => {},
+      unset: async () => {},
+      dispose: async () => {},
+    }),
+  } as never)
+  ctx.provide('remote', { $on: () => () => {} } as never)
   return { ctx, slots: ctx.get('slots') as SlotRegistry, locale, settingsDescribe, settingsOpenDocument }
 }
 
@@ -75,7 +91,7 @@ function generalEntry(slots: SlotRegistry) {
 
 describe('ui-settings-general apply', () => {
   it('declares the services it uses', () => {
-    expect(inject).toEqual(['slots', 'locale', 'connection'])
+    expect(inject).toEqual(['slots', 'locale', 'connection', 'settingsScope', 'remote'])
   })
 
   it('fills all five seats for declarations before or after apply', async () => {
@@ -90,7 +106,8 @@ describe('ui-settings-general apply', () => {
     // The nav label is a locale-following thunk; owners resolve at read time.
     expect(resolveSlotLabel(entry.options.label)).toBe('通用设置')
     expect(before.slots.spec('settings.general.item')).toEqual({ kind: 'list', scope: 'root' })
-    expect(before.slots.entries('settings.general.item')).toEqual([])
+    // The LAN-access switch is this plugin's own general-item row.
+    expect(before.slots.entries('settings.general.item').map(e => e.options.id)).toEqual(['lan-access'])
     // The onboarding hole stays declared for feature-owned steps; this plugin
     // no longer seats one.
     expect(before.slots.entries('settings.onboarding')).toEqual([])
@@ -188,7 +205,7 @@ describe('ui-settings-general apply', () => {
     for (const [name, component] of SEATS) {
       expect(b.slots.entries(name)[0]!.component).toBe(component)
     }
-    expect(b.slots.entries('settings.general.item')).toEqual([])
+    expect(b.slots.entries('settings.general.item').map(e => e.options.id)).toEqual(['lan-access'])
     expect(b.slots.spec('settings.general.item')).toEqual({ kind: 'list', scope: 'root' })
     // The recovered registrations still ride the locale path.
     b.locale.setLocale('en')

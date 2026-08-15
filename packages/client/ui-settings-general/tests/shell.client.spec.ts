@@ -22,6 +22,21 @@ async function bench() {
     isLoopback: false,
   } as never)
   ctx.provide('remote', { $on: () => () => {} } as never)
+  // The LAN-access row binds the `network` namespace through the settings
+  // scope transport; an unavailable scope keeps the row at its default.
+  ctx.provide('settingsScope', {
+    bind: () => ({
+      getSnapshot: () => ({
+        status: 'unavailable' as const, value: undefined, base: undefined,
+        user: undefined, revision: undefined, writable: false, mode: 'memory' as const,
+      }),
+      subscribe: () => () => {},
+      load: async () => {},
+      set: async () => {},
+      unset: async () => {},
+      dispose: async () => {},
+    }),
+  } as never)
   return { ctx, slots: ctx.get('slots') as SlotRegistry }
 }
 
@@ -48,8 +63,8 @@ const CHILD_SPECS = {
 } as const
 
 describe('ui-settings apply', () => {
-  it('declares only the slot registry (a pure composition face, no locale)', () => {
-    expect(inject).toEqual(['slots', 'locale', 'connection'])
+  it('declares the services it uses', () => {
+    expect(inject).toEqual(['slots', 'locale', 'connection', 'settingsScope', 'remote'])
   })
 
   it('registers the shell and declares every child slot, before or after the declaration', async () => {
