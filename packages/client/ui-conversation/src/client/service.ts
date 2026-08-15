@@ -62,10 +62,22 @@ export interface IConversation {
 function browserDraftAttachment(file: File): ComposerAttachment {
   return {
     kind: 'image',
-    id: crypto.randomUUID() as DraftAttachmentId,
+    id: browserDraftId() as DraftAttachmentId,
     previewUrl: URL.createObjectURL(file),
     file,
   }
+}
+
+/**
+ * Mint one per-draft id without requiring a secure context: draft ids only
+ * distinguish pending images, and `crypto.randomUUID` is a secure-context Web
+ * API absent on plain-HTTP LAN origins, so the id is random hex instead of a
+ * UUID. Exported for same-package tests.
+ * @returns a `draft-`-prefixed random hex id.
+ */
+export function browserDraftId(): string {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(8))
+  return `draft-${Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')}`
 }
 
 interface ImageUrlEntry {
