@@ -131,7 +131,10 @@ describe('registerLanAccess', () => {
 
   it('logs and keeps going when the patch has no webserver host line', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'dsh-lan-'))
+    const previous = process.env.DSH_HOME
+    process.env.DSH_HOME = dir
     try {
+      mkdirSync(join(dir, 'profiles', 'web'), { recursive: true })
       const patchPath = profilePatchPath()
       writeFileSync(patchPath, '# nothing here\n[]\n')
       const { trigger, restore } = await mount(dir, '0.0.0.0')
@@ -143,6 +146,8 @@ describe('registerLanAccess', () => {
         restore()
       }
     } finally {
+      if (previous === undefined) delete process.env.DSH_HOME
+      else process.env.DSH_HOME = previous
       rmSync(dir, { recursive: true, force: true })
     }
   })
