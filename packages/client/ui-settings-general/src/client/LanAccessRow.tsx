@@ -2,7 +2,7 @@
 import clsx from 'clsx'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import type { SettingsKey } from '../locales.ts'
+import type { SettingsKey } from './locales.ts'
 import css from './LanAccessRow.module.css'
 
 /** Registration-side preference face. */

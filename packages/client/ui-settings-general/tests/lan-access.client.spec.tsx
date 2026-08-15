@@ -1,9 +1,14 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
-import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { Context } from '@deepseek-ai/cordis'
+import { SlotRegistry, createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { apply, inject } from '@deepseek-ai/dsh-client-ui-settings-general/client'
 import { LanAccessRow, type LanAccessRowProps } from '../src/client/LanAccessRow.tsx'
 import { zh } from '../src/client/locales.ts'
+
+// The standard props share the shell never reads; stub them as never-called.
+const neverHook = (() => { throw new Error('row must not read global hooks') }) as never
 
 afterEach(() => { cleanup() })
 
@@ -15,6 +20,8 @@ function mountRow(value: boolean, setLanAccess = vi.fn()) {
     setLanAccess,
     view: render(
       <LanAccessRow
+        useSessions={neverHook}
+        useWorkspaces={neverHook}
         useLanAccess={sel => sel(store.getSnapshot())}
         setLanAccess={setLanAccess}
         t={t}
@@ -40,9 +47,6 @@ describe('LanAccessRow', () => {
 
 describe('LanAccessRow wiring', () => {
   it('the apply-registered row writes the network namespace through the scope', async () => {
-    const { Context } = await import('@deepseek-ai/cordis')
-    const { SlotRegistry } = await import('@deepseek-ai/dsh-client-runtime/client')
-    const { apply, inject } = await import('@deepseek-ai/dsh-client-ui-settings-general/client')
     const ctx = new Context()
     await ctx.plugin(SlotRegistry).await()
     ctx.provide('locale', {
@@ -67,7 +71,7 @@ describe('LanAccessRow wiring', () => {
     } as never)
     ctx.provide('connection', { api: {}, isLoopback: true } as never)
     ctx.provide('remote', { $on: () => () => {} } as never)
-    const slots = ctx.get('slots') as SlotRegistry
+    const slots = ctx.get('slots') as unknown as SlotRegistry
     slots.register(
       {
         name: 'root',
