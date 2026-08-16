@@ -59,7 +59,7 @@ export function ConversationRoot({
     query.addEventListener('change', onChange)
     return () => { query.removeEventListener('change', onChange) }
   }, [])
-  const scrollerEl = useRef<HTMLDivElement | null>(null)
+  const scrollerEl = useRef<HTMLElement | null>(null)
   const seatRef = useCallback((seat: HTMLDivElement | null): void => {
     seatEl.current = seat
     scrollerEl.current = seat?.parentElement ?? null

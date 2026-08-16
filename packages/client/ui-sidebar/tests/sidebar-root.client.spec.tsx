@@ -144,10 +144,10 @@ describe('SidebarRoot shell', () => {
 
   it('docks the collapsed rail as a bottom bar on narrow viewports', () => {
     const b = mountShell({ collapsed: true, narrow: true })
-    expect(b.rootElement().classList.contains(css.bottomBar)).toBe(true)
+    expect(b.rootElement().classList.contains(css.bottomBar ?? '')).toBe(true)
     // Wide only: the same collapse without the narrow flag keeps the rail.
     const wide = mountShell({ collapsed: true })
-    expect(wide.rootElement().classList.contains(css.bottomBar)).toBe(false)
+    expect(wide.rootElement().classList.contains(css.bottomBar ?? '')).toBe(false)
   })
 
   it('the bottom bar toggles the composer through the window contract', () => {
