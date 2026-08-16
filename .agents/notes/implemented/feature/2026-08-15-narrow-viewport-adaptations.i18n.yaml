@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-15-narrow-viewport-adaptations.md
-2026-08-15-narrow-viewport-adaptations.md: 182cdff2702defd25fc7c6d9fcaf8628fe6c233e
-2026-08-15-narrow-viewport-adaptations.zh.md: 19ca16b50e62e4d8a4f8fa193b5bc1a0f24fc6a0
+2026-08-15-narrow-viewport-adaptations.md: 846bf53aac663d24d5bd9fa66d431c796ed3f7a9
+2026-08-15-narrow-viewport-adaptations.zh.md: 203874e76b49f318ceb988ae44eb0dd7e837dd91

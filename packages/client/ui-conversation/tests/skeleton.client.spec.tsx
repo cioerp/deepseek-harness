@@ -588,6 +588,21 @@ describe('ConversationRoot — narrow composer auto-hide', () => {
     act(() => { fireEvent.scroll(scroller) })
     expect(root.hasAttribute('data-composer-hidden')).toBe(false)
   })
+
+  it('reveals the composer without moving the conversation scroll position', () => {
+    const b = mount(conversationSnapshot())
+    const root = b.view.container.firstElementChild as HTMLElement
+    const scroller = b.view.container.querySelector('[data-conversation-scroll]') as HTMLElement
+    // Scrolled up mid-transcript (a reading position), composer hidden.
+    stubScroll(scroller, 300)
+    act(() => { fireEvent.scroll(scroller) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(true)
+    // The reveal toggle shows the composer (the sticky seat pins it to the
+    // viewport bottom) and leaves the transcript exactly where it was.
+    act(() => { window.dispatchEvent(new CustomEvent('dsh.composer.toggle')) })
+    expect(root.hasAttribute('data-composer-hidden')).toBe(false)
+    expect(scroller.scrollTop).toBe(300)
+  })
 })
 
 describe('ConversationSessionHeader — narrow collapse', () => {

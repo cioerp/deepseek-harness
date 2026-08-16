@@ -93,9 +93,14 @@ export function ConversationRoot({
   }
   const revealComposer = useCallback((): void => {
     setRevealed(true)
+    // Revealing must not yank the transcript to the bottom: clear the
+    // reading-gesture flag directly (the sticky seat pins the composer to
+    // the viewport bottom wherever the user is scrolled) instead of the old
+    // scroll-to-end that moved the conversation.
+    setScrolledUp(false)
+    scrolledUpRef.current = false
     const scroller = scrollerEl.current
     if (scroller === null) return
-    if (typeof scroller.scrollTo === 'function') scroller.scrollTo({ top: scroller.scrollHeight })
     scroller.querySelector('textarea')?.focus()
   }, [])
   // Latest hidden state for the toggle handler: read through a ref so the

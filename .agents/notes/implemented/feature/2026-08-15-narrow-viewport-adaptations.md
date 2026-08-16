@@ -15,7 +15,7 @@ A family of narrow-viewport adaptations, all keyed to the existing `1024` auto-c
 - **Conversation column** becomes `clamp(748px, 72vw, 1200px)` — vw so every consumer of the shared width axis resolves one value, keeping the composer = content + 32px relation exact at every width.
 - **Collapsed sidebar** leaves the CSS grid flow (track 0, conversation full width) and docks as a full-width bottom bar: toggle / new session / input / settings. The center column reserves its 56px strip so the composer sits above the bar and nothing is covered. The rail's workspace region yields (expand the sidebar to browse).
 - **Session header** folds to a one-line title bar: mobile starts folded, desktop starts expanded and gains a fold button; the choice survives viewport changes.
-- **Composer** stays collapsed by default on narrow screens; the bottom bar's Input pill toggles it through the documented `dsh.composer.toggle` window event. Scrolling away from the bottom hides it (and blurs, dropping the mobile keyboard); the scroll measure subtracts the seat's own height and uses a 40/120px hysteresis, so the fold cannot cascade into flicker.
+- **Composer** stays collapsed by default on narrow screens; the bottom bar's Input pill toggles it through the documented `dsh.composer.toggle` window event. Revealing pins the sticky seat to the viewport bottom without moving the conversation scroll (the reading position is preserved); scrolling away from the bottom hides it (and blurs, dropping the mobile keyboard); the scroll measure subtracts the seat's own height and uses a 40/120px hysteresis, so the fold cannot cascade into flicker.
 - **Settings panel** becomes a top nav + content stack; chat side padding and user-bubble width tighten.
 
 ## Verification
