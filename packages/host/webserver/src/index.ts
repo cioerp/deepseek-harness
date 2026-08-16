@@ -47,6 +47,14 @@ export interface Config {
   host: '127.0.0.1' | '0.0.0.0'
   /** Listen port; zero requests an OS-assigned port. */
   port: number
+  /**
+   * Idle keep-alive socket timeout in milliseconds. After a response the
+   * server destroys a socket that receives no new request inside this window;
+   * Node's 5000ms default races with a browser reusing a pooled socket right
+   * around the destroy, surfacing as intermittent `failed to fetch` on remote
+   * clients. 60000 shrinks that window; 0 disables the timeout.
+   */
+  keepAliveTimeout: number
 }
 
 /**
@@ -60,6 +68,7 @@ export class WebServer extends Service {
   static Config: z<Config> = z.object({
     host: z.union([z.const('127.0.0.1'), z.const('0.0.0.0')]).required(),
     port: z.natural().max(65535).required(),
+    keepAliveTimeout: z.natural().max(3_600_000).default(60_000),
   })
 
   private readonly exact = new Map<string, WebRoute>()
@@ -167,7 +176,7 @@ export class WebServer extends Service {
     // rejection killing the process on one malformed request (bad %-escape,
     // client dropping mid-body). Per-request failures log and answer 400 —
     // never a process exit.
-    this.server = createServer((req, res) => {
+    this.server = createServer({ keepAliveTimeout: this.config.keepAliveTimeout }, (req, res) => {
       handle(req, res).catch((err: unknown) => {
         this.ctx.logger.warn(err instanceof Error ? err : new Error(String(err)))
         if (res.headersSent) {

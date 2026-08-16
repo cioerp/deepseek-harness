@@ -796,6 +796,14 @@ export interface Config {
   host: '127.0.0.1' | '0.0.0.0'
   /** Listen port; zero requests an OS-assigned port. */
   port: number
+  /**
+   * Idle keep-alive socket timeout in milliseconds. After a response the
+   * server destroys a socket that receives no new request inside this window;
+   * Node's 5000ms default races with a browser reusing a pooled socket right
+   * around the destroy, surfacing as intermittent `failed to fetch` on remote
+   * clients. 60000 shrinks that window; 0 disables the timeout.
+   */
+  keepAliveTimeout: number
 }
 ```
 

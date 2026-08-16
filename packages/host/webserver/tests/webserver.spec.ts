@@ -28,7 +28,7 @@ afterEach(async () => {
 })
 
 /** Write a cordis.yml with one webserver row, then boot it through the real Loader. */
-async function loadComposition(port = 0): Promise<Context> {
+async function loadComposition(port = 0, extra: Record<string, unknown> = {}): Promise<Context> {
   root = await mkdtemp(join(tmpdir(), 'dsh-webserver-loader-'))
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
@@ -36,6 +36,7 @@ async function loadComposition(port = 0): Promise<Context> {
     '  config:',
     "    host: '127.0.0.1'",
     `    port: ${String(port)}`,
+    ...Object.entries(extra).map(([key, value]) => `    ${key}: ${JSON.stringify(value)}`),
     '',
   ].join('\n'))
 
@@ -198,6 +199,22 @@ describe('real Loader composition', () => {
     expect(upgradedServerClosed).toBe(true)
     upgraded.destroy()
     await expect(request(port, '/probe')).rejects.toThrow()
+  })
+
+  it('defaults the keep-alive timeout to 60s (Node\'s 5s default races browser pooled-socket reuse into `failed to fetch`)', { timeout: 60_000 }, async () => {
+    const loaded = await loadComposition()
+    const server = loaded.webServer
+    server.register({ kind: 'exact', path: '/probe', handler: (_req, res) => { res.writeHead(200); res.end('EXACT') } })
+    const response = await fetch(`http://127.0.0.1:${server.port}/probe`)
+    expect(response.headers.get('keep-alive')).toContain('timeout=60')
+  })
+
+  it('honors a configured keep-alive timeout on the served sockets', { timeout: 60_000 }, async () => {
+    const loaded = await loadComposition(0, { keepAliveTimeout: 15000 })
+    const server = loaded.webServer
+    server.register({ kind: 'exact', path: '/probe', handler: (_req, res) => { res.writeHead(200); res.end('EXACT') } })
+    const response = await fetch(`http://127.0.0.1:${server.port}/probe`)
+    expect(response.headers.get('keep-alive')).toContain('timeout=15')
   })
 
   it('fails the fiber when the port is already taken (fail-loud at activation)', { timeout: 60_000 }, async () => {
