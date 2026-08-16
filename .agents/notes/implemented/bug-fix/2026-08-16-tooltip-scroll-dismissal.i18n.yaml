@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-16-tooltip-scroll-dismissal.md
+2026-08-16-tooltip-scroll-dismissal.md: f7f77c65fa0fef91af248764de38e152e72209f6
+2026-08-16-tooltip-scroll-dismissal.zh.md: bd2583120f7987b3e39baaabd0ae1c7c67ef46d2

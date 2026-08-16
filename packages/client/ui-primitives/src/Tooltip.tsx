@@ -6,7 +6,11 @@
 // attaching a tooltip never changes the anchor's layout context. The bubble is
 // position:fixed and coordinates come from the anchor's rect at show time, so
 // it escapes ancestor overflow clipping (the sidebar rail clips its column)
-// without a portal.
+// without a portal. Dismissal is input-device-agnostic: besides mouseleave
+// and blur, any scroll or a pointer press outside the anchor closes the
+// bubble, so a touch tap elsewhere — or the narrow composer collapsing to
+// `visibility: hidden` mid-scroll (no mouseleave ever fires on a phone) —
+// cannot leave it floating over the transcript.
 
 import { cloneElement, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FocusEventHandler, MouseEventHandler, MutableRefObject, ReactElement, Ref } from 'react'
@@ -115,6 +119,29 @@ export function Tooltip({ label, side = 'right', delayMs = 0, disabled = false, 
     }
     return cancelShow
   }, [cancelShow, disabled])
+
+  // Touch taps never fire mouseleave, and the narrow composer collapses to
+  // `visibility: hidden` mid-scroll, so neither hide channel fires and the
+  // fixed bubble would float over the transcript. Close it on any scroll
+  // while visible, or on a pointer press outside the anchor (a phone tap
+  // elsewhere dismisses it the way a desktop click-away would); a press on
+  // the anchor itself keeps it. The check runs on the raw event, so it does
+  // not race the React render that collapses the composer.
+  useEffect(() => {
+    if (pos === null) return
+    const dismiss = (): void => { setPos(null) }
+    const onPointerDown = (event: PointerEvent): void => {
+      const el = anchor.current
+      if (el === null || !(event.target instanceof Node) || el.contains(event.target)) return
+      dismiss()
+    }
+    window.addEventListener('scroll', dismiss, { capture: true, passive: true })
+    window.addEventListener('pointerdown', onPointerDown, true)
+    return () => {
+      window.removeEventListener('scroll', dismiss, { capture: true })
+      window.removeEventListener('pointerdown', onPointerDown, true)
+    }
+  }, [pos])
 
   const show = () => {
     if (disabled) return
