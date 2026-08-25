@@ -5,6 +5,8 @@
   - text: Standard mode
   - button "Session log":
     - text: Session log
+  - button "Collapse header":
+    - img
     - img
   - tablist:
     - tab "Chat" [selected]

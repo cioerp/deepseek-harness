@@ -4,6 +4,8 @@
   - button "Session log":
     - text: Session log
     - img
+  - button "Collapse header":
+    - img
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"

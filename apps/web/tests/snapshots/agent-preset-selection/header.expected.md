@@ -9,3 +9,5 @@
 - button "Session log":
   - text: Session log
   - img
+- button "Collapse header":
+  - img

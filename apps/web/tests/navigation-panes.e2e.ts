@@ -300,7 +300,16 @@ describe('web e2e: navigation & panes over a rich seeded session', () => {
     if (buttonBox === null || headerBox === null) {
       throw new Error('Session Header export geometry is unavailable')
     }
-    expect(headerBox.x + headerBox.width - (buttonBox.x + buttonBox.width)).toBeLessThanOrEqual(32)
+    // The export button sits in the header's action row, with the header
+    // collapse toggle to its right (narrow-viewport adaptation); both must
+    // stay inside the header so the row reads left-to-right in order.
+    const collapseButton = page.getByRole('button', { name: 'Collapse header' })
+    const collapseBox = await collapseButton.boundingBox()
+    if (collapseBox === null) {
+      throw new Error('Session Header collapse toggle is unavailable')
+    }
+    expect(buttonBox.x).toBeLessThan(collapseBox.x)
+    expect(collapseBox.x + collapseBox.width).toBeLessThanOrEqual(headerBox.x + headerBox.width + 0.5)
     const responsePromise = page.waitForResponse(response =>
       response.request().method() === 'HEAD'
       && new URL(response.url()).pathname === '/api/session.export', { timeout: 30_000 })
