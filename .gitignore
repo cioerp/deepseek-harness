@@ -39,3 +39,7 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+
+# Local mobile-ui maintenance tooling (not part of the branch)
+sync-master.sh
+CONFLICT-GUIDE-mobile-ui.md
