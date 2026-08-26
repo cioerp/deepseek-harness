@@ -70,20 +70,15 @@ function browserDraftAttachment(file: File): ComposerAttachment {
 }
 
 /**
- * Random v4-style UUID for a browser-only draft id.
- *
- * `crypto.randomUUID` is a Web API, but it only exists in secure contexts
- * (HTTPS or localhost). The GUI also serves plain-HTTP LAN addresses
- * (cordis.patch.yml `host: 0.0.0.0`), where the draft attachment path would
- * throw `crypto.randomUUID is not a function`. Fall back to a Math.random
- * v4-shaped id so drafts still work there; the id is only a local draft key,
- * never a durable or cross-origin identifier.
+ * Mint one per-draft id without requiring a secure context: draft ids only
+ * distinguish pending images, and `crypto.randomUUID` is a secure-context Web
+ * API absent on plain-HTTP LAN origins, so the id is random hex instead of a
+ * UUID. Exported for same-package tests.
+ * @returns a `draft-`-prefixed random hex id.
  */
-function browserDraftId(): string {
-  const c = globalThis.crypto
-  if (c?.randomUUID !== undefined) return c.randomUUID()
-  const hex = (): string => Math.floor(Math.random() * 0x10000).toString(16).padStart(4, '0')
-  return `${hex()}${hex()}-${hex()}-4${hex().slice(1)}-${((Math.floor(Math.random() * 0x10000) & 0x3fff) | 0x8000).toString(16)}-${hex()}${hex()}${hex()}`
+export function browserDraftId(): string {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(8))
+  return `draft-${Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('')}`
 }
 
 interface ImageUrlEntry {
