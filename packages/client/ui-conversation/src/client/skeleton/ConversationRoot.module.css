@@ -19,7 +19,10 @@
      the input card clears the bare clearance, so the input card stays exactly
      content + 32px at every width. Declared on the root because the
      transcript and the composer seat are sibling subtrees. */
-  --dsh-chat-content-width: 748px;
+  /* Fluid cap: tracks the viewport (vw, so every consumer resolves the same
+     value) up to 1200px so a widescreen uses the column width, never below
+     the original 748px on narrow windows. */
+  --dsh-chat-content-width: clamp(748px, 72vw, 1200px);
   --dsh-composer-card-max-width: calc(var(--dsh-chat-content-width) + 32px);
   --dsh-composer-side-clearance: 16px;
   --dsh-composer-dock-inset: 8px;
@@ -406,7 +409,12 @@
   left: 50%;
   bottom: 92px;
   z-index: -1;
-  width: calc(100% * 1051 / 776);
+  /* Blur scales with the input card, capped at the pre-fluid content width
+     (748px card + 2×16px clearance = 780px): the fluid --dsh-chat-content-width
+     grows the transcript column on widescreens, but the decorative ellipse
+     must not grow past the column with it (1680px is the test's no-bleed
+     control stop). The cap keeps the narrow-viewport bleed by construction. */
+  width: calc(min(var(--dsh-chat-content-width), 780px) * 1051 / 776);
   aspect-ratio: 1051 / 468;
   transform: translate(-50%, 50%);
   pointer-events: none;
