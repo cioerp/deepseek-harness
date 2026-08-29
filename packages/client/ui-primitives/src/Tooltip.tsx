@@ -1,16 +1,5 @@
-// Hover/focus label bubble (figma tooltip pill: dark plate, white text).
-// TODO: interaction is a placeholder (horizontal overflow clamps and a
-// vertical collision flips the bubble to the other side, but there is no
-// arrow) — visuals and behavior get a proper pass later.
-// The anchor is the child element itself (cloneElement, no wrapper node), so
-// attaching a tooltip never changes the anchor's layout context. The bubble is
-// position:fixed and coordinates come from the anchor's rect at show time, so
-// it escapes ancestor overflow clipping (the sidebar rail clips its column)
-// without a portal. Dismissal is input-device-agnostic: besides mouseleave
-// and blur, any scroll or a pointer press outside the anchor closes the
-// bubble, so a touch tap elsewhere — or the narrow composer collapsing to
-// `visibility: hidden` mid-scroll (no mouseleave ever fires on a phone) —
-// cannot leave it floating over the transcript.
+// Cloning the anchor preserves its layout context. Fixed positioning lets the
+// bubble escape ancestor overflow clipping without a portal.
 
 import { cloneElement, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FocusEventHandler, MouseEventHandler, MutableRefObject, ReactElement, Ref } from 'react'
