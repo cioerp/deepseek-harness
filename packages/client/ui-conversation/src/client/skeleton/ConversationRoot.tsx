@@ -444,7 +444,7 @@ export function ConversationRoot({
   // Narrow reading mode: the composer stays out of the way by default —
   // hidden until the bottom bar reveals it, then again while the user scrolls
   // up. Interaction overlays (pending) must always stay visible.
-  const composerHidden = isNarrow && phase === 'active' && pendingInteraction.length === 0
+  const composerHidden = isNarrow && phase === 'active' && pendingInteraction === undefined
     && (scrolledUp || !revealed)
   composerHiddenRef.current = composerHidden
 

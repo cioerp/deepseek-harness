@@ -673,7 +673,7 @@ describe('ConversationRoot — narrow composer auto-hide', () => {
   }
 
   it('keeps the composer collapsed by default, toggles on the window contract', () => {
-    const b = mount(conversationSnapshot())
+    const b = mount(sessionSnapshotOf())
     const root = b.view.container.firstElementChild as HTMLElement
     const scroller = b.view.container.querySelector('[data-conversation-scroll]') as HTMLElement
     // Default: hidden — the input box appears only on explicit reveal.
@@ -697,7 +697,7 @@ describe('ConversationRoot — narrow composer auto-hide', () => {
   })
 
   it('reveals the composer without moving the conversation scroll position', () => {
-    const b = mount(conversationSnapshot())
+    const b = mount(sessionSnapshotOf())
     const root = b.view.container.firstElementChild as HTMLElement
     const scroller = b.view.container.querySelector('[data-conversation-scroll]') as HTMLElement
     // Scrolled up mid-transcript (a reading position), composer hidden.
@@ -727,7 +727,7 @@ describe('ConversationSessionHeader — narrow collapse', () => {
   })
 
   it('collapses to a one-line title bar by default and expands on tap', () => {
-    const b = mount(conversationSnapshot())
+    const b = mount(sessionSnapshotOf())
     // Collapsed: a single toggle showing the session title; no view tabs.
     const toggle = b.view.getByRole('button', { name: 'Child' })
     expect(b.view.queryByRole('tab')).toBeNull()
@@ -742,7 +742,7 @@ describe('ConversationSessionHeader — narrow collapse', () => {
 describe('ConversationSessionHeader — desktop fold', () => {
   it('starts expanded on wide viewports and folds on demand', () => {
     // No matchMedia stub: jsdom lacks it, so `narrow` resolves false.
-    const b = mount(conversationSnapshot())
+    const b = mount(sessionSnapshotOf())
     // Desktop starts expanded: view tabs visible.
     expect(b.view.getAllByRole('tab').length).toBeGreaterThan(0)
     fireEvent.click(b.view.getByRole('button', { name: '收起标题栏' }))
