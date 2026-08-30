@@ -203,6 +203,11 @@ export function ConversationRoot({
   // Live hidden-state mirror for the scroll handler's hysteresis: the handler
   // must decide from the latest flip without waiting for a re-render.
   const scrolledUpRef = useRef(false)
+  /** Focus/blur the composer input (textarea, or the upstream contenteditable div). */
+  const composerInput = (root: Element | null): HTMLElement | null => {
+    if (root === null) return null
+    return root.querySelector<HTMLElement>('textarea, [data-composer-input]')
+  }
   const onScroll = (event: UIEvent<HTMLDivElement>): void => {
     const el = event.currentTarget
     // Distance to the TRANSCRIPT end, not the scroller end: subtracting the
@@ -218,7 +223,7 @@ export function ConversationRoot({
     scrolledUpRef.current = next
     setScrolledUp(next)
     // Scrolling up is a reading gesture: drop the keyboard with the composer.
-    if (next) el.querySelector('textarea, [data-composer-input]')?.blur()
+    if (next) composerInput(el)?.blur()
   }
   const revealComposer = useCallback((): void => {
     setRevealed(true)
@@ -230,7 +235,7 @@ export function ConversationRoot({
     scrolledUpRef.current = false
     const scroller = scrollerEl.current
     if (scroller === null) return
-    scroller.querySelector('textarea, [data-composer-input]')?.focus()
+    composerInput(scroller)?.focus()
   }, [])
   // Latest hidden state for the toggle handler: read through a ref so the
   // callback (declared before the derivation) never touches the const early.
@@ -242,7 +247,7 @@ export function ConversationRoot({
       revealComposer()
     } else {
       setRevealed(false)
-      scrollerEl.current?.querySelector('textarea, [data-composer-input]')?.blur()
+      composerInput(scrollerEl.current)?.blur()
     }
   }, [revealComposer])
   useEffect(() => {
