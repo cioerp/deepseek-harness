@@ -218,7 +218,7 @@ export function ConversationRoot({
     scrolledUpRef.current = next
     setScrolledUp(next)
     // Scrolling up is a reading gesture: drop the keyboard with the composer.
-    if (next) el.querySelector('textarea')?.blur()
+    if (next) el.querySelector('textarea, [data-composer-input]')?.blur()
   }
   const revealComposer = useCallback((): void => {
     setRevealed(true)
@@ -230,7 +230,7 @@ export function ConversationRoot({
     scrolledUpRef.current = false
     const scroller = scrollerEl.current
     if (scroller === null) return
-    scroller.querySelector('textarea')?.focus()
+    scroller.querySelector('textarea, [data-composer-input]')?.focus()
   }, [])
   // Latest hidden state for the toggle handler: read through a ref so the
   // callback (declared before the derivation) never touches the const early.
@@ -242,7 +242,7 @@ export function ConversationRoot({
       revealComposer()
     } else {
       setRevealed(false)
-      scrollerEl.current?.querySelector('textarea')?.blur()
+      scrollerEl.current?.querySelector('textarea, [data-composer-input]')?.blur()
     }
   }, [revealComposer])
   useEffect(() => {
