@@ -172,16 +172,6 @@ export function freezeMessage<T extends Message>(message: T): T {
 }
 
 /**
- * Mint one stable message id without requiring a secure context.
- *
- * `crypto.randomUUID` is a Web API only present in secure contexts (HTTPS or
- * loopback); the client bundle runs on plain-HTTP LAN origins too, where a
- * message id would throw. `randomUUID` from dsh-util-crypto backs with
- * `crypto.getRandomValues` (exposed on every origin).
- * @returns an RFC 4122 version 4 UUID string.
- */
-
-/**
  * Create one identified message and freeze it before publication.
  * @param input - complete role, content, and source for a new message.
  * @returns an immutable message with a fresh stable identity.
