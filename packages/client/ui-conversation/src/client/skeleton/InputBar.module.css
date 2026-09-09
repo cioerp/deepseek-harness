@@ -285,6 +285,21 @@
   gap: 12px;
 }
 
+/* Narrow viewports: keep the toolbar on a single row so the model name can
+   shrink via its own container query (text → ellipsis → icon-only below
+   360px) instead of the whole trailing group dropping to a second line.
+   The tools group gives up first — it absorbs the deficit and ellipsizes
+   before the trailing controls lose room. */
+@media (max-width: 1023px) {
+  .row {
+    flex-wrap: nowrap;
+  }
+  .trailing {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+}
+
 /* Attach circle (figma + control): 28px, selector fill, primary glyph. */
 .add {
   display: grid;
