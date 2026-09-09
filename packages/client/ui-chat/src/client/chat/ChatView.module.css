@@ -20,15 +20,6 @@
   container-type: inline-size;
 }
 
-/* Narrow viewports (matches the layout's auto-collapse breakpoint): the
-   shared-width alignment offset is desktop's concern — phones trade the
-   32px side padding for horizontal space. */
-@media (max-width: 1023px) {
-  .scroll {
-    padding: 16px 12px;
-  }
-}
-
 :global([data-conversation-scroll]) .root {
   flex: 0 0 auto;
   min-height: auto;

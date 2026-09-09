@@ -354,44 +354,4 @@ describe('Tooltip', () => {
     )
     expect(screen.queryByRole('tooltip')).toBeNull()
   })
-
-  it('dismisses the bubble on scroll — the narrow composer collapses mid-scroll, so no mouseleave fires', () => {
-    render(
-      <Tooltip label="Send">
-        <button type="button">anchor</button>
-      </Tooltip>,
-    )
-    fireEvent.mouseEnter(screen.getByText('anchor'))
-    expect(screen.getByRole('tooltip')).toBeTruthy()
-    fireEvent.scroll(window)
-    expect(screen.queryByRole('tooltip')).toBeNull()
-    // Dismissal is one-shot, not sticky: a fresh hover re-shows the bubble.
-    fireEvent.mouseEnter(screen.getByText('anchor'))
-    expect(screen.getByRole('tooltip')).toBeTruthy()
-  })
-
-  it('dismisses the bubble on a pointer press outside the anchor (touch taps never fire mouseleave)', () => {
-    render(
-      <Tooltip label="Send">
-        <button type="button">anchor</button>
-      </Tooltip>,
-    )
-    fireEvent.mouseEnter(screen.getByText('anchor'))
-    expect(screen.getByRole('tooltip')).toBeTruthy()
-    fireEvent.pointerDown(document.body)
-    expect(screen.queryByRole('tooltip')).toBeNull()
-  })
-
-  it('keeps the bubble while the pointer press lands on the anchor itself', () => {
-    render(
-      <Tooltip label="Send">
-        <button type="button">anchor</button>
-      </Tooltip>,
-    )
-    const anchor = screen.getByText('anchor')
-    fireEvent.mouseEnter(anchor)
-    expect(screen.getByRole('tooltip')).toBeTruthy()
-    fireEvent.pointerDown(anchor)
-    expect(screen.getByRole('tooltip')).toBeTruthy()
-  })
 })

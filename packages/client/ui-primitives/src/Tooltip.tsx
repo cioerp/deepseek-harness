@@ -109,29 +109,6 @@ export function Tooltip({ label, side = 'right', delayMs = 0, disabled = false, 
     return cancelShow
   }, [cancelShow, disabled])
 
-  // Touch taps never fire mouseleave, and the narrow composer collapses to
-  // `visibility: hidden` mid-scroll, so neither hide channel fires and the
-  // fixed bubble would float over the transcript. Close it on any scroll
-  // while visible, or on a pointer press outside the anchor (a phone tap
-  // elsewhere dismisses it the way a desktop click-away would); a press on
-  // the anchor itself keeps it. The check runs on the raw event, so it does
-  // not race the React render that collapses the composer.
-  useEffect(() => {
-    if (pos === null) return
-    const dismiss = (): void => { setPos(null) }
-    const onPointerDown = (event: PointerEvent): void => {
-      const el = anchor.current
-      if (el === null || !(event.target instanceof Node) || el.contains(event.target)) return
-      dismiss()
-    }
-    window.addEventListener('scroll', dismiss, { capture: true, passive: true })
-    window.addEventListener('pointerdown', onPointerDown, true)
-    return () => {
-      window.removeEventListener('scroll', dismiss, { capture: true })
-      window.removeEventListener('pointerdown', onPointerDown, true)
-    }
-  }, [pos])
-
   const show = () => {
     if (disabled) return
     const el = anchor.current

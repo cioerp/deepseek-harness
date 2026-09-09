@@ -225,51 +225,6 @@
   overflow-y: auto;
 }
 
-/* Narrow viewports: the two-column shell becomes a top nav + content stack —
-   a 188px fixed rail would leave the content column a sliver on phones. */
-@media (max-width: 1023px) {
-  .panel {
-    flex-direction: column;
-    width: 100%;
-    max-width: calc(100vw - 24px);
-    height: min(800px, calc(100vh - 24px));
-  }
-
-  .nav {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px;
-  }
-
-  /* The section title yields to the section pills on phones. */
-  .navTitle {
-    display: none;
-  }
-
-  .navList {
-    flex-direction: row;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-  }
-
-  .navCell {
-    flex: none;
-    width: auto;
-  }
-
-  .navLabel {
-    flex: none;
-  }
-
-  .options {
-    padding: 0 16px 16px;
-  }
-}
-
 /* Visually-hidden text seat (close button accessible name from slot content). */
 .hiddenLabel {
   position: absolute;
