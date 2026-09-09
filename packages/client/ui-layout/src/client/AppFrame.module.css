@@ -27,6 +27,83 @@
   overflow: hidden;
   background: var(--dsw-specific-sidebar-fill);
   border-right: 0.5px solid var(--dsw-alias-border-l3);
+  /* Floating over the centre on narrow phones; no track so it never
+     squeezes the conversation. */
+  transition: transform var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+/* Narrow expanded: the sidebar floats over the centre from the frame's left
+   edge instead of occupying a grid track. */
+.frame[data-sidebar-floating] .sidebarCol {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  border-right: 0.5px solid var(--dsw-alias-border-l3);
+  box-shadow: 8px 0 24px rgb(0 0 0 / 0.2);
+}
+
+/* Narrow collapsed: the sidebar is fully hidden (no rail) — the grid track is
+   0 wide and its content is clipped, so nothing steals phone width. */
+.frame[data-sidebar-hidden] .sidebarCol {
+  visibility: hidden;
+}
+
+/* Dismiss overlay behind the floating sidebar: tapping the conversation
+   closes the expanded panel. Sits under the sidebar (z 30) and over content. */
+.sidebarScrim {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  padding: 0;
+  border: none;
+  background: rgb(0 0 0 / 0.25);
+  cursor: default;
+}
+
+/* Top-left reveal button shown only while the narrow sidebar is hidden. */
+.sidebarReveal {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-raised);
+  cursor: pointer;
+  color: var(--dsw-alias-label-primary);
+}
+
+.sidebarRevealIcon,
+.sidebarRevealIcon::before,
+.sidebarRevealIcon::after {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  content: '';
+}
+
+.sidebarRevealIcon {
+  position: relative;
+}
+
+.sidebarRevealIcon::before {
+  position: absolute;
+  top: -5px;
+  left: 0;
+}
+
+.sidebarRevealIcon::after {
+  position: absolute;
+  top: 5px;
+  left: 0;
 }
 
 .centerCol {

@@ -276,7 +276,8 @@ describe('AppFrame normal width concessions', () => {
     expect(instance.getSnapshot().layoutInfo).toMatchObject({ rightbarShown: true, rightbar: 864 })
     act(() => { instance.actions.closeRightbar() })
     resize(455)
-    expect(tracks(frame)).toEqual([56, 0])
+    // Narrow phones hide the collapsed sidebar entirely (no rail track).
+    expect(tracks(frame)).toEqual([0, 0])
     resize(1920)
     expect(tracks(frame)).toEqual([420, 0])
   })
@@ -285,10 +286,11 @@ describe('AppFrame normal width concessions', () => {
     frameWidth = 800
     const { frame, instance, rightOwner } = mountFrame()
     act(() => { instance.actions.toggleSidebar() })
-    expect(tracks(frame)).toEqual([280, 0])
+    // Expanded sidebar floats over the centre (no grid track on narrow).
+    expect(tracks(frame)).toEqual([0, 0])
     expect(rightOwner()).toEqual({ width: 344, viewportWidth: 800, canShow: true })
     act(() => { instance.actions.openRightbar(true, false) })
-    expect(tracks(frame)).toEqual([56, 344])
+    expect(tracks(frame)).toEqual([0, 344])
     expect(instance.getSnapshot().layoutInfo).toMatchObject({ narrowExpanded: false, rightbar: 360 })
     expect(rightOwner().canShow).toBe(true)
   })
@@ -313,13 +315,15 @@ describe('AppFrame normal width concessions', () => {
     resize(1024)
     expect(tracks(frame)[0]).toBe(400)
     resize(1023)
-    expect(tracks(frame)[0]).toBe(56)
+    // Narrow collapses fully: the rail hides completely (track 0).
+    expect(tracks(frame)[0]).toBe(0)
     act(() => { instance.actions.toggleSidebar() })
-    expect(tracks(frame)[0]).toBe(400)
+    // Expanded narrow sidebar floats: still no track.
+    expect(tracks(frame)[0]).toBe(0)
     resize(980)
-    expect(tracks(frame)[0]).toBe(400)
+    expect(tracks(frame)[0]).toBe(0)
     act(() => { instance.actions.toggleSidebar() })
-    expect(tracks(frame)[0]).toBe(56)
+    expect(tracks(frame)[0]).toBe(0)
     resize(1920)
     expect(tracks(frame)[0]).toBe(400)
   })
@@ -329,7 +333,8 @@ describe('AppFrame normal width concessions', () => {
     act(() => { instance.actions.toggleSidebar() })
     resize(980)
     act(() => { instance.actions.toggleSidebar() })
-    expect(tracks(frame)[0]).toBe(280)
+    // Narrow expansion floats the sidebar (no grid track).
+    expect(tracks(frame)[0]).toBe(0)
     expect(instance.getSnapshot().layoutInfo.sidebar).toBe(0)
   })
 })
@@ -420,7 +425,7 @@ describe('AppFrame right panel presentation', () => {
     frameWidth = 700
     const { frame, instance, rightOwner } = mountFrame()
     act(() => { instance.actions.openRightbar(false, true) })
-    expect(tracks(frame)).toEqual([56, 0])
+    expect(tracks(frame)).toEqual([0, 0])
     expect(rightOwner()).toEqual({ width: 0, viewportWidth: 700, canShow: false })
     expect(instance.getSnapshot().layoutInfo.rightbarShown).toBe(true)
     expect(frame.querySelector('[data-side="rightbar"]')).toBeNull()

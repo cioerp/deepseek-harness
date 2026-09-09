@@ -171,6 +171,15 @@ export function AppFrame({
   colsRef.current = cols
   const rightbarWidth = useRef(normal.rightbar)
   rightbarWidth.current = normal.rightbar
+  // Narrow phones hide the collapsed sidebar ENTIRELY (no 56px rail stealing
+  // width); expanding floats the full sidebar over the centre column.
+  const gridSidebar = narrow ? 0 : cols.sidebar
+  const narrowFloating = narrow && !sidebarCollapsed
+  // Floating panel width: the full sidebar, capped at the phone viewport so a
+  // 320px screen does not overflow (the scrim covers the rest of the frame).
+  const renderSidebarWidth = narrow
+    ? Math.min(SIDEBAR_DEFAULT, viewport)
+    : cols.sidebar
 
   // The drag base is the rendered width captured at drag start (grabbing a
   // concession-clamped panel must not jump back to the stored preference);
@@ -192,8 +201,8 @@ export function AppFrame({
   const productTitle = process.env.DSH_CLIENT_TITLE ?? t('brand.localBuild')
   const sidebar = useMemo(() => renderSlot('sidebar', {
     collapsed: sidebarCollapsed,
-    width: cols.sidebar,
-  }), [renderSlot, sidebarCollapsed, cols.sidebar])
+    width: renderSidebarWidth,
+  }), [renderSlot, sidebarCollapsed, renderSidebarWidth])
   const main = useMemo(() => (
     <MainPanel usePanelInfo={usePanelInfo} renderSlot={renderSlot} />
   ), [usePanelInfo, renderSlot])
@@ -205,9 +214,11 @@ export function AppFrame({
       className={css.frame}
       style={{
         gridTemplateColumns:
-          `${cols.sidebar}px minmax(0, 1fr) ${cols.rightbar}px`,
+          `${gridSidebar}px minmax(0, 1fr) ${cols.rightbar}px`,
       }}
       data-sidebar-collapsed={sidebarCollapsed || undefined}
+      data-sidebar-hidden={narrow && sidebarCollapsed ? '' : undefined}
+      data-sidebar-floating={narrowFloating || undefined}
       data-rightbar-collapsed={cols.rightbar === 0 || undefined}
       data-rightbar-fullscreen={layoutInfo.rightbarFullscreen || undefined}
       data-rightbar-instant={layoutInfo.rightbarInstant || undefined}
@@ -218,9 +229,27 @@ export function AppFrame({
         useSessions={useSessions}
         usePanelInfo={usePanelInfo}
       />
+      {narrow && sidebarCollapsed && (
+        <button
+          type="button"
+          className={css.sidebarReveal}
+          aria-label={t('layout.openSidebar')}
+          onClick={() => { actions.toggleSidebar() }}
+        >
+          <span className={css.sidebarRevealIcon} aria-hidden />
+        </button>
+      )}
       <div className={css.sidebarCol}>
         {sidebar}
       </div>
+      {narrowFloating && (
+        <button
+          type="button"
+          className={css.sidebarScrim}
+          aria-label={t('layout.openSidebar')}
+          onClick={() => { actions.toggleSidebar() }}
+        />
+      )}
       <>
         <CenterColumn>{main}</CenterColumn>
         <RightbarColumn>
@@ -230,8 +259,9 @@ export function AppFrame({
       <div className={css.overlayLayer} data-shell-overlay>
         {overlays}
       </div>
-      {/* The collapsed rail is fixed-width: no resize handle while closed. */}
-      {!sidebarCollapsed && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
+      {/* No resize handle while the rail is closed (fixed-width), and on
+          narrow frames the sidebar floats (no track to drag). */}
+      {!sidebarCollapsed && !narrow && <DragHandle side="sidebar" left={cols.sidebar} onStart={onSidebarStart} onDrag={onSidebarDrag} onEnd={onDragEnd} />}
       {layoutInfo.rightbarShown && !layoutInfo.rightbarFullscreen && normal.rightbar > 0 && (
         <DragHandle side="rightbar" left={viewport - normal.rightbar} onStart={onRightbarStart} onDrag={onRightbarDrag} onEnd={onDragEnd} />
       )}
