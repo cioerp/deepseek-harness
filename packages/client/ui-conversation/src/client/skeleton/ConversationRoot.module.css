@@ -34,6 +34,18 @@
   --dsh-composer-dock-inset: 8px;
 }
 
+/* Narrow viewports (phones, matches the layout's <1024px breakpoint): the
+   shared-width offset shrinks so content reads 12px from each edge instead
+   of 32px. Clearance −4 makes every consumer (scroller, pills, takeover
+   cards, turn rail, dock cards) land on the same 12px axis without
+   per-component overrides — the transcript's `clearance + 16px` formula
+   yields 12px and the composer seat's bare clearance keeps the card flush. */
+@media (max-width: 1023px) {
+  .root {
+    --dsh-composer-side-clearance: -4px;
+  }
+}
+
 .header {
   position: relative;
   flex: none;
