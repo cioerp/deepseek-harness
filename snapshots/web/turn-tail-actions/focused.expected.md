@@ -8,6 +8,8 @@
   - button "Collapse header":
     - img
     - img
+  - button "Open the sidebar":
+    - img
   - tablist:
     - tab "Chat" [selected]
     - tab "Trajectory"
@@ -35,10 +37,6 @@
   - img
   - text: Bash Print alpha to stdout
 - paragraph: DONE
-- button "Turn usage 15.8K tok · Cache hit 49.7%":
-  - img
-  - img
-  - text: Turn usage 15.8K tok · Cache hit 49.7%
 - button "Copy":
   - img
 - button "Good response":
@@ -47,9 +45,17 @@
   - img
 - button "Branch into a new conversation":
   - img
-- text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
-- textbox "Message or run a task... / commands, @ files or sessions"
+- button "Usage 15.8K tok":
+  - img
+  - text: Usage 15.8K tok
+- button "Ran for {{duration}}":
+  - img
+  - text: Ran for {{duration}}
+- text: {{clock}}
+- textbox "Message or run a task, / commands, @ files or sessions"
 - button "Commands":
+  - img
+- button "Add attachment":
   - img
 - 'button "Access mode, current: Workspace Write"': Workspace Write
 - button "Select model, current DeepSeek-V4-Flash":
@@ -57,4 +63,9 @@
   - img
 - button "6% of context used"
 - button "Send message" [disabled]
-- text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 50% Input 15.7K tok · Output 112 tok
+- button "1 turns 2 steps · {{throughput}} tok/s":
+  - img
+  - text: 1 turns 2 steps{{throughput}} tok/s
+- button "15.8K tok · Cache hit 50%":
+  - img
+  - text: 15.8K tokCache hit 50%

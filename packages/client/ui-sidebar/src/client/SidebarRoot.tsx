@@ -52,12 +52,23 @@ function localBuildVersion(): string | undefined {
 export function SidebarRoot({
   collapsed,
   width,
-  narrow,
   startSession,
   toggleSidebar,
   t,
   renderSlot,
 }: SidebarRootComponentProps) {
+  // Narrow viewport (AppFrame folds the sidebar itself on small screens, but
+  // the composer-reveal bottom bar is this shell's own mobile affordance, so
+  // the breakpoint is probed here rather than threaded through AppFrame).
+  const [isNarrow, setIsNarrow] = useState(() =>
+    typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 1023px)').matches : false)
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const query = window.matchMedia('(max-width: 1023px)')
+    const onChange = (event: MediaQueryListEvent): void => { setIsNarrow(event.matches) }
+    query.addEventListener('change', onChange)
+    return () => { query.removeEventListener('change', onChange) }
+  }, [])
   // Wide content stays mounted while the collapse animates (fading via
   // .collapsed .wide), unmounts at settle, and remounts right away on expand.
   const [settled, setSettled] = useState(collapsed)
@@ -129,7 +140,7 @@ export function SidebarRoot({
       ref={column}
       className={clsx(
         css.root, !wide && css.collapsed, !wide && everWide.current && css.railIn,
-        collapsed && wide && css.fading, collapsed && narrow && css.bottomBar,
+        collapsed && wide && css.fading, collapsed && isNarrow && css.bottomBar,
         !pointerInside && css.quietBars,
       )}
       style={wide ? { width: collapsed ? lastWideWidth.current : width } : undefined}
@@ -213,7 +224,7 @@ export function SidebarRoot({
       {/* Narrow bottom bar: the composer stays collapsed by default on mobile
           (ConversationRoot data-composer-hidden) — this pill toggles it,
           via the documented `dsh.composer.toggle` window contract. */}
-      {collapsed && narrow && (
+      {collapsed && isNarrow && (
         <button
           type="button"
           className={css.inputReveal}

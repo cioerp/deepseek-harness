@@ -6,7 +6,7 @@
   - button "Session log":
     - text: Session log
     - img
-  - button "Collapse header":
+  - button "Open the sidebar":
     - img
   - tablist:
     - tab "Chat" [selected]
