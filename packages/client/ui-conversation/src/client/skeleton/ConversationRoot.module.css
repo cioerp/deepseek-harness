@@ -39,6 +39,18 @@
    meet at the column edge. The rows add up to it — 10px top inset, the 30px
    title row, the tab strip's 10px margin, a 16px tab line, and its 9px bottom
    inset — so no row below may grow past its figure. */
+/* Narrow viewports (phones, matches the layout's <1024px breakpoint): the
+   shared-width offset shrinks so content reads 12px from each edge instead
+   of 32px. Clearance −4 makes every consumer (scroller, pills, takeover
+   cards, turn rail, dock cards) land on the same 12px axis without
+   per-component overrides — the transcript's `clearance + 16px` formula
+   yields 12px and the composer seat's bare clearance keeps the card flush. */
+@media (max-width: 1023px) {
+  .root {
+    --dsh-composer-side-clearance: -4px;
+  }
+}
+
 .header {
   flex: none;
   box-sizing: border-box;
