@@ -2,7 +2,7 @@
 // chain, AND the composer bar (session-maybe slot) stay mounted across
 // no-session/session transitions — the bar renders inert via owner props.
 
-import { useCallback, useEffect, useRef, useState, type UIEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import type { ConversationSlotProps, InputZone } from '../contract/slots.ts'
@@ -176,87 +176,6 @@ export function ConversationRoot({
     seatObserver.current.observe(seat)
     seatObserver.current.observe(scroller)
   }, [])
-
-  // Narrow reading mode: while the user is scrolled up and the input is
-  // unfocused, the composer seat yields to the transcript (one-tap reveal).
-  const [isNarrow, setIsNarrow] = useState(() =>
-    typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 1023px)').matches : false)
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return
-    const query = window.matchMedia('(max-width: 1023px)')
-    const onChange = (event: MediaQueryListEvent): void => { setIsNarrow(event.matches) }
-    query.addEventListener('change', onChange)
-    return () => { query.removeEventListener('change', onChange) }
-  }, [])
-  const scrollerEl = useRef<HTMLElement | null>(null)
-  const seatRef = useCallback((seat: HTMLDivElement | null): void => {
-    seatEl.current = seat
-    scrollerEl.current = seat?.parentElement ?? null
-    seatResizeRef(seat)
-  }, [seatResizeRef])
-  const [scrolledUp, setScrolledUp] = useState(false)
-  // The sidebar's bottom bar (narrow + collapsed) reveals the composer through
-  // this window event — a documented cross-package string contract, like the
-  // `data-conversation-scroll` attribute.
-  const [revealed, setRevealed] = useState(false)
-  const seatEl = useRef<HTMLDivElement | null>(null)
-  // Live hidden-state mirror for the scroll handler's hysteresis: the handler
-  // must decide from the latest flip without waiting for a re-render.
-  const scrolledUpRef = useRef(false)
-  /** Focus/blur the composer input (textarea, or the upstream contenteditable div). */
-  const composerInput = (root: Element | null): HTMLElement | null => {
-    if (root === null) return null
-    return root.querySelector<HTMLElement>('textarea, [data-composer-input]')
-  }
-  const onScroll = (event: UIEvent<HTMLDivElement>): void => {
-    const el = event.currentTarget
-    // Distance to the TRANSCRIPT end, not the scroller end: subtracting the
-    // seat's own height keeps the measure invariant to the seat appearing or
-    // disappearing, so showing the composer cannot flip the threshold and
-    // cascade into the flicker a raw scrollHeight check would cause.
-    const seatHeight = seatEl.current?.offsetHeight ?? 0
-    const dist = el.scrollHeight - seatHeight - el.scrollTop - el.clientHeight
-    const prev = scrolledUpRef.current
-    // Hysteresis: a 40..120px dead zone absorbs slow-scroll jitter at the edge.
-    const next = prev ? dist < 40 ? false : prev : dist > 120
-    if (next === prev) return
-    scrolledUpRef.current = next
-    setScrolledUp(next)
-    // Scrolling up is a reading gesture: drop the keyboard with the composer.
-    if (next) composerInput(el)?.blur()
-  }
-  const revealComposer = useCallback((): void => {
-    setRevealed(true)
-    // Revealing must not yank the transcript to the bottom: clear the
-    // reading-gesture flag directly (the sticky seat pins the composer to
-    // the viewport bottom wherever the user is scrolled) instead of the old
-    // scroll-to-end that moved the conversation.
-    setScrolledUp(false)
-    scrolledUpRef.current = false
-    const scroller = scrollerEl.current
-    if (scroller === null) return
-    composerInput(scroller)?.focus()
-  }, [])
-  // Latest hidden state for the toggle handler: read through a ref so the
-  // callback (declared before the derivation) never touches the const early.
-  const composerHiddenRef = useRef(false)
-  const toggleComposer = useCallback((): void => {
-    // The bottom bar button is a switch: reveal when hidden, hide when shown
-    // (blur so the mobile keyboard closes with the composer).
-    if (composerHiddenRef.current) {
-      revealComposer()
-    } else {
-      setRevealed(false)
-      composerInput(scrollerEl.current)?.blur()
-    }
-  }, [revealComposer])
-  useEffect(() => {
-    const onToggleEvent = (): void => { toggleComposer() }
-    window.addEventListener('dsh.composer.toggle', onToggleEvent)
-    return () => {
-      window.removeEventListener('dsh.composer.toggle', onToggleEvent)
-    }
-  }, [toggleComposer])
 
   // Publishes the column's live width as --dsh-conversation-column-width so
   // the shared width axis can adapt (see the .root CSS), and re-clamps a
@@ -440,28 +359,21 @@ export function ConversationRoot({
     { fallback: composerBar, fallbackOnly: sessionId === undefined, overlay: true },
   )
 
-  // Narrow reading mode: the composer stays out of the way by default —
-  // hidden until the bottom bar reveals it, then again while the user scrolls
-  // up. Interaction overlays (pending) must always stay visible.
-  const composerHidden = isNarrow && phase === 'active' && pendingInteraction === undefined
-    && (scrolledUp || !revealed)
-  composerHiddenRef.current = composerHidden
-
   // Sticky wraps the whole chain output (fallback + elected overlay), not
   // only `.composerStack`: overlay:true renders those as siblings, and sticky
   // on the fallback alone would leave a business-owned takeover at the content
   // end off-screen when the user is not pinned to the floor.
   const composerSeat = (
-    <div ref={seatRef} className={css.composerSeat} data-composer-seat="">
+    <div ref={seatResizeRef} className={css.composerSeat} data-composer-seat="">
       {composer}
     </div>
   )
 
   return (
-    <div ref={rootResizeRef} className={css.root} data-phase={phase} data-composer-hidden={composerHidden || undefined}>
+    <div ref={rootResizeRef} className={css.root} data-phase={phase}>
       {sessionId === undefined ? null : renderSlot('conversation.session.header', {})}
       <div className={css.body}>
-        <div className={css.scrollBody} data-conversation-scroll="" onScroll={onScroll}>
+        <div className={css.scrollBody} data-conversation-scroll="">
           {sessionId === undefined ? null : renderSlot('conversation.session', {})}
           {composerSeat}
         </div>

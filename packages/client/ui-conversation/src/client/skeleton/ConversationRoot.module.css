@@ -378,16 +378,6 @@
   );
 }
 
-/* Narrow reading mode (ConversationRoot data-composer-hidden): the composer
-   seat yields to the transcript while the user is scrolled up and the input
-   is unfocused; the sidebar bottom bar carries the reveal button. Height 0
-   (not a transform) so the hidden seat never extends the scrollable area. */
-.root[data-composer-hidden] .composerSeat {
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-}
-
 /* An open @/slash menu (data-trigger-menu, ui-input-trigger) renders inside
    the input card, so the seat's stacking context caps its z-index; lift the
    seat above the back-to-bottom control (z-index 8, ui-chat ChatView) while

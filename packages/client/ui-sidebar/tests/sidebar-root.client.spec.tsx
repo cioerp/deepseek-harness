@@ -8,18 +8,11 @@ import type {
   SidebarSettingsOwnerProps,
 } from '../src/client/contract/slots.ts'
 import { SidebarRoot } from '../src/client/SidebarRoot.tsx'
-import css from '../src/client/SidebarRoot.module.css'
 import { en } from '../src/client/locales.ts'
 import { en as commonEn } from '@deepseek-ai/dsh-client-locale/src/locales/en.ts'
 
 // Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.
 const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined, reload: () => {} })) as GlobalStandardProps['useResource']
-
-/** Stub matchMedia so SidebarRoot's internal narrow probe reports `narrow`. */
-function stubMatchMedia(narrow: boolean): void {
-  const matches = { matches: narrow, media: '', onchange: null, addEventListener: () => {}, removeEventListener: () => {}, addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false }
-  vi.stubGlobal('matchMedia', vi.fn().mockReturnValue(matches))
-}
 
 // English-dictionary translate stub: the shell renders the same copy the
 // assertions below query by accessible name.
@@ -29,7 +22,6 @@ const t: SidebarRootComponentProps['t'] = key =>
 afterEach(() => {
   cleanup()
   vi.unstubAllEnvs()
-  vi.unstubAllGlobals()
   vi.useRealTimers()
 })
 
@@ -40,7 +32,7 @@ type AttentionSnapshot = Parameters<Parameters<SidebarRootComponentProps['useSes
 const noAttention: AttentionSnapshot = new Map()
 const useSessionPendingInteraction: SidebarRootComponentProps['useSessionPendingInteraction'] = selector => selector(noAttention)
 
-function mountShell({ collapsed = false, width = 300, narrow = false }: { collapsed?: boolean; width?: number; narrow?: boolean } = {}) {
+function mountShell({ collapsed = false, width = 300 }: { collapsed?: boolean; width?: number } = {}) {
   const startSession = vi.fn()
   const toggleSidebar = vi.fn()
   let regionOwner: SidebarSectionOwnerProps | undefined
@@ -48,9 +40,6 @@ function mountShell({ collapsed = false, width = 300, narrow = false }: { collap
   let footerActionOwner: SidebarFooterActionOwnerProps | undefined
   const brandMark = <span data-testid="custom-brand-mark">M</span>
   const brandName = <span data-testid="custom-brand-name">Custom Brand</span>
-  // SidebarRoot probes its own narrow breakpoint; narrow=true stubs a narrow
-  // matchMedia so the bottom bar path is exercised.
-  stubMatchMedia(narrow)
   let current = { collapsed, width }
   const root = () => (
     <SidebarRoot
@@ -97,7 +86,6 @@ function mountShell({ collapsed = false, width = 300, narrow = false }: { collap
       current = { ...current, ...next }
       view.rerender(root())
     },
-    rootElement: () => view.container.firstElementChild as HTMLElement,
   }
 }
 
@@ -194,25 +182,5 @@ describe('SidebarRoot shell', () => {
     const b = mountShell({ collapsed: true })
     expect(b.regionOwner().wide).toBe(false)
     expect(screen.getByRole('button', { name: 'Open sidebar' })).toBeTruthy()
-  })
-
-  it('docks the collapsed rail as a bottom bar on narrow viewports', () => {
-    const b = mountShell({ collapsed: true, narrow: true })
-    expect(b.rootElement().classList.contains(css.bottomBar ?? '')).toBe(true)
-    // Wide only: the same collapse without the narrow flag keeps the rail.
-    const wide = mountShell({ collapsed: true })
-    expect(wide.rootElement().classList.contains(css.bottomBar ?? '')).toBe(false)
-  })
-
-  it('the bottom bar toggles the composer through the window contract', () => {
-    const listener = vi.fn()
-    window.addEventListener('dsh.composer.toggle', listener)
-    try {
-      mountShell({ collapsed: true, narrow: true })
-      fireEvent.click(screen.getByRole('button', { name: 'Input' }))
-      expect(listener).toHaveBeenCalledOnce()
-    } finally {
-      window.removeEventListener('dsh.composer.toggle', listener)
-    }
   })
 })
