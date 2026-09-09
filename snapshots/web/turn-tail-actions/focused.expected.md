@@ -5,8 +5,6 @@
   - text: Standard mode
   - button "Session log":
     - text: Session log
-  - button "Collapse header":
-    - img
     - img
   - button "Open the sidebar":
     - img
