@@ -208,8 +208,11 @@ async function awaitTableLayout(target: Page): Promise<void> {
     if (element === null) return false
     const tracks = getComputedStyle(element).gridTemplateColumns.split(' ').map(Number.parseFloat)
     const root = element.querySelector<HTMLElement>('div[data-phase]')
-    // Mirrored from ui-layout's SIDEBAR_COLLAPSED; these tests use the Host compiler face.
-    return tracks[0] === 56 && tracks.at(-1) === 0
+    // Mirrored from ui-layout's SIDEBAR_AUTO_COLLAPSE: below the narrow
+    // breakpoint the fork hides the collapsed sidebar entirely (0 track)
+    // instead of the 56px rail.
+    const expectedLeft = window.innerWidth < 1024 ? 0 : 56
+    return tracks[0] === expectedLeft && tracks.at(-1) === 0
       && element.getAnimations().every(animation =>
         animation.playState === 'finished' || animation.playState === 'idle')
       && root !== null

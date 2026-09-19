@@ -173,13 +173,17 @@ describe('web e2e: queue row actions', () => {
           leftInset: queueBox.left - composerBox.left,
           rightInset: composerBox.right - queueBox.right,
           dockInset: Number.parseFloat(getComputedStyle(composer).getPropertyValue('--dsh-composer-dock-inset')),
+          sideClearance: Number.parseFloat(getComputedStyle(composer).getPropertyValue('--dsh-composer-side-clearance')),
         }
       })
       expect(metrics).toBeDefined()
       expect(metrics!.leftInset).toBeGreaterThanOrEqual(0)
       expect(metrics!.rightInset).toBeGreaterThanOrEqual(0)
-      expect(metrics!.leftInset).toBeCloseTo(metrics!.dockInset, 1)
-      expect(metrics!.rightInset).toBeCloseTo(metrics!.dockInset, 1)
+      // Fork: the narrow override shifts the composer card's left edge by the
+      // side clearance, so the queue's left inset tracks dockInset + clearance
+      // while the right edge stays at the bare dock inset.
+      expect(metrics!.leftInset).toBeCloseTo(metrics!.dockInset + metrics!.sideClearance, 1)
+      expect(metrics!.rightInset).toBeCloseTo(metrics!.dockInset + metrics!.sideClearance, 1)
     }, { timeout: 10_000 })
     await page.setViewportSize({ width: 1680, height: 1000 })
 

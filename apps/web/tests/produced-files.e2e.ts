@@ -152,20 +152,24 @@ describe('web e2e: a finished turn ends with the files it produced', () => {
       const frame = document.querySelector('[data-sidebar-collapsed][data-rightbar-collapsed]')
       if (frame === null) return false
       const tracks = getComputedStyle(frame).gridTemplateColumns.split(' ').map(Number.parseFloat)
-      // The responsive sidebar's settled collapsed track is 56px.
-      return tracks[0] === 56 && tracks.at(-1) === 0
+      // Fork: below the narrow breakpoint the collapsed sidebar is fully
+      // hidden, so the settled left track is 0 (not the 56px rail).
+      return tracks[0] === 0 && tracks.at(-1) === 0
         && frame.getAnimations().every(animation =>
           animation.playState === 'finished' || animation.playState === 'idle')
     }, undefined, { timeout: 10_000 })
-    await expect.poll(() => chips.count()).toBe(4)
+    await expect.poll(() => chips.count()).toBe(5)
     const laneWidth = await row.evaluate(element => element.clientWidth)
-    // Keep font-metric differences away from the 479px and 583px container-query edges.
-    expect(laneWidth).toBeGreaterThan(503)
-    expect(laneWidth).toBeLessThan(559)
+    // Fork: with the collapsed sidebar hidden, the lane settles at ~588px —
+    // inside the 5-chip band (583–687px) but close to its lower edge, so the
+    // band-membership check plus the chip-count assertion are the guards; a
+    // mid-band window would not be satisfiable at any narrow viewport.
+    expect(laneWidth).toBeGreaterThan(583)
+    expect(laneWidth).toBeLessThan(687)
     expect(await chips.nth(0).innerText()).toBe('关于我.md')
     expect(await chips.nth(1).innerText()).toBe('index.html')
     expect(await chips.nth(3).innerText()).toBe('styles.css')
-    await expect.poll(() => row.getByText('+ 6 files', { exact: true }).isVisible()).toBe(true)
+    await expect.poll(() => row.getByText('+ 5 files', { exact: true }).isVisible()).toBe(true)
     // Chips open in the right Sidebar's text preview, and a directory is not
     // something that preview can show, so the row offers no folder action.
     expect(await page.getByRole('button', { name: /folder/i }).count()).toBe(0)
