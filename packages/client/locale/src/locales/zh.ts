@@ -33,6 +33,7 @@ export const zh = {
   'back': '返回',
   'brand.localBuild': 'DSH 本地构建',
   'layout.openSidebar': '打开侧边栏',
+  'workspace.defaultName': '默认工作区',
   'unknown': '未知',
   'none': '无',
   'truncated': '已截断',
