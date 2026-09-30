@@ -886,6 +886,12 @@ describe('mapStopReason / mapUsage', () => {
       .toMatchObject({ kind: 'error', failure: { code: 'TIMEOUT' } })
     expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'ECONNRESET socket closed' })))
       .toMatchObject({ kind: 'error', failure: { code: 'TRANSPORT' } })
+    // A wire close mid-JSON (JSON.parse over a truncated SSE data line) is a
+    // transport truncation, not a model output problem — retryable.
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'Unexpected end of JSON input' })))
+      .toMatchObject({ kind: 'error', failure: { code: 'TRANSPORT' } })
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'Unterminated string in JSON at position 1234' })))
+      .toMatchObject({ kind: 'error', failure: { code: 'TRANSPORT' } })
     expect(mapStopReason(assistant({
       stopReason: 'error',
       errorMessage: 'HTTP 400: input exceeds the model context window limit',
