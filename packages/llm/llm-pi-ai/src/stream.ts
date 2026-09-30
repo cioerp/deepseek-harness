@@ -59,9 +59,12 @@ function classifyPiAiError(message: string): string {
   // A JSON payload cut off mid-structure (`JSON.parse` over a truncated SSE
   // data line): the wire closed before the document ended, so this is transport
   // truncation, not malformed model output. V8 words a cut inside a string as
-  // `Unterminated string in JSON at position N`; a cut between tokens reads
-  // `Unexpected end of JSON input`.
-  if (/unexpected end of json input|unterminated string in json/i.test(message)) return 'TRANSPORT'
+  // `Unterminated string in JSON at position N`, a cut between tokens as
+  // `Unexpected end of JSON input`, and a mis-framed SSE event (a gateway
+  // emitting extra bytes past one complete document, e.g. a duplicated or
+  // double-line `data:` field) as `Unexpected non-whitespace character after
+  // JSON` — all wire-glitch shapes that a fresh request streams cleanly.
+  if (/unexpected end of json input|unterminated string in json|non-whitespace character after json/i.test(message)) return 'TRANSPORT'
   if (/\b(?:network|connection|socket|fetch)\b|\bECONN[A-Z]+\b/i.test(message)
     || /\b(?:other side closed|HTTP2 request did not get a response|WebSocket closed unexpectedly)\b/i.test(message)
     // undici renders a mid-stream socket drop as a bare `terminated` (its
