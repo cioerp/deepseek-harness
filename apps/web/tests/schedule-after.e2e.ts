@@ -978,16 +978,14 @@ describe.skipIf(MODE === 'record')('web e2e: active Schedule catalog', () => {
       MODE,
     )
 
-    // Fork: the marker lives in the sidebar, which the dismiss above hid:
-    // re-open the floating panel so the a11y query can see the marker.
+    // Fork: re-open the floating sidebar panel so the a11y query can see the
+    // schedule marker (the dismiss above hid it). The next-run assertion below
+    // is the upstream rc.2 verification that supersedes the fork's per-id
+    // ACTIVE_SCHEDULE_LABEL checks.
     if (await page.locator('[data-sidebar-hidden]').count() > 0) {
       await page.getByRole('button', { name: 'Open sidebar', exact: true }).click()
       await expect(await page.locator('[data-sidebar-floating]').count()).toBe(1)
     }
-    const sessionRow = page.getByRole('treeitem', { name: new RegExp(CATALOG_TITLE) })
-    expect(await sessionRow.getByRole('img', { name: ACTIVE_SCHEDULE_LABEL }).count()).toBe(1)
-    for (const id of Object.values(CATALOG_IDS)) {
-      parentAgent.session.append('schedule/change', { version: 1, operation: 'delete', id })
     // The next-run line states the target as the reader's local clock stamp
     // followed by the distance to it in parentheses: the stamp is the instant in
     // this device's zone, and only the parenthesized distance ticks.
